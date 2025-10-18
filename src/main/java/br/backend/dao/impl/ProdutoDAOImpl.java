@@ -22,7 +22,8 @@ public class ProdutoDAOImpl implements ProdutoDAO {
 
     @Override
     public void inserirProduto(Produto obj) {
-        String sql = "INSERT into Produto (nome, preco_unitario, unidade, quantidade_minima_ quantidade maxima, categoria)" + "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO produto (nome, preco_unitario, unidade, quantidade_minima, quantidade_maxima, categoria) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement st = database.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             st.setString(1, obj.getNome());
             st.setDouble(2, obj.getPreco());
@@ -37,8 +38,8 @@ public class ProdutoDAOImpl implements ProdutoDAO {
                     obj.setId(rs.getInt(1));
                 }
             }
-        } catch (SQLException ex) {
-            Logger.getLogger(ProdutoDAOImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao inserir produto: " + e.getMessage());
         }
     }
 
