@@ -33,7 +33,11 @@ public class ProdutoControladorImpl implements Controlador {
 
                     return objectMapper.writeValueAsString(new Resposta("sucesso", "Produto criado com sucesso", objCriado));
                 }
-
+                case "atualizar": {
+                    Produto objAtualizacao = objectMapper.convertValue(requisicao.getDados(), Produto.class);
+                    Produto objAtualizado = produtoServico.atualizarProduto(objAtualizacao.getId(), objAtualizacao);
+                    return objectMapper.writeValueAsString(new Resposta("sucesso", "Produto atualizado com sucesso", objAtualizado));
+                }
                 default:
                     return objectMapper.writeValueAsString(
                             new Resposta("erro", "Ação desconhecida: " + acao, null)
