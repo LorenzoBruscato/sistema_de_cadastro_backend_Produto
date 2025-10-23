@@ -20,53 +20,41 @@ public class CategoriaControladorImpl implements Controlador {
     @Override
     public String processarRequisicao(Requisicao<?> requisicao) {
         try {
-            String acao = requisicao.getAcao().toLowerCase();
-
-            switch (acao) {
-                case "criar": {
-                    Categoria cat = objectMapper.convertValue(requisicao.getDados(), Categoria.class);
+            switch (requisicao.getAcao()) {
+                case CRIAR: {
+                    Categoria cat = (Categoria) requisicao.getDados();
                     Categoria catCriada = categoriaServico.inserirCategoria(cat.getNome(), cat.getTamanho(), cat.getEmbalagem());
-                    return objectMapper.writeValueAsString(new Resposta("sucesso", "Categoria criada", catCriada));
+                    return objectMapper.writeValueAsString(new Resposta<>("sucesso", "Categoria criada", catCriada));
                 }
 
-                case "encontrar": {
+                case ENCONTRAR: {
                     Integer id = objectMapper.convertValue(requisicao.getDados(), Categoria.class).getId();
                     Categoria encontrada = categoriaServico.buscarPorId(id);
-                    if (encontrada != null) {
-                        return objectMapper.writeValueAsString(new Resposta("sucesso", "Categoria encontrada", encontrada));
-                    } else {
-                        return objectMapper.writeValueAsString(new Resposta("erro", "Categoria não encontrada", null));
-                    }
                 }
 
-                case "atualizar": {
+                case ATUALIZAR: {
                     Categoria catAtualizacao = objectMapper.convertValue(requisicao.getDados(), Categoria.class);
                     Categoria catAtualizada = categoriaServico.atualizarCategoria(catAtualizacao.getId(), catAtualizacao);
-                    return objectMapper.writeValueAsString(new Resposta("sucesso", "Categoria atualizada", catAtualizada));
                 }
 
-                case "deletar": {
+                case DELETAR: {
                     Integer id = objectMapper.convertValue(requisicao.getDados(), Categoria.class).getId();
                     boolean excluido = categoriaServico.deletarCategoria(id);
-                    if (excluido) {
-                        return objectMapper.writeValueAsString(new Resposta("sucesso", "Categoria deletada", null));
-                    } else {
-                        return objectMapper.writeValueAsString(new Resposta("erro", "Categoria não encontrada", null));
-                    }
+
                 }
 
-                case "listar": {
-                    return objectMapper.writeValueAsString(new Resposta("sucesso", "Lista de categorias", categoriaServico.listarCategorias()));
+                case LISTAR: {
+                    return objectMapper.writeValueAsString(new Resposta<>("sucesso", "Lista de categorias", categoriaServico.listarCategorias()));
                 }
 
                 default:
-                    return objectMapper.writeValueAsString(new Resposta("erro", "Ação desconhecida: " + acao, null));
+                    return objectMapper.writeValueAsString(new Resposta<>("erro", "Ação desconhecida", null));
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             try {
-                return objectMapper.writeValueAsString(new Resposta("erro", "Erro ao processar requisição: " + e.getMessage(), null));
+                return objectMapper.writeValueAsString(new Resposta<>("erro", "Erro ao processar requisição: " + e.getMessage(), null));
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

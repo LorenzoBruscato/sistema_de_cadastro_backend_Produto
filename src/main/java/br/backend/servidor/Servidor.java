@@ -1,22 +1,26 @@
 package br.backend.servidor;
 
-
 import br.backend.controlador.impl.CategoriaControladorImpl;
 import br.backend.controlador.impl.ProdutoControladorImpl;
+import br.backend.dao.RegistroDAO;
 import br.backend.dao.impl.CategoriaDAOImpl;
 import br.backend.dao.impl.ProdutoDAOImpl;
+import br.backend.dao.impl.RegistroDAOImpl;
 import br.backend.database.Database;
+import br.backend.modelo.Categoria;
+import br.backend.modelo.Produto;
 import br.backend.modelo.Requisicao;
 import br.backend.modelo.Resposta;
+import br.backend.modelo.enums.Entidade;
 import br.backend.servico.CategoriaServico;
 import br.backend.servico.ProdutoServico;
 import br.backend.util.JsonUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 
 public class Servidor {
 
@@ -27,6 +31,8 @@ public class Servidor {
     private CategoriaServico categoriaServico;
     private CategoriaDAOImpl categoriaDAO;
     private CategoriaControladorImpl categoriaControlador;
+
+    private RegistroDAO registroDAO;
 
     private ProdutoServico produtoServico;
     private ProdutoDAOImpl produtoDAO;
@@ -41,10 +47,10 @@ public class Servidor {
         this.categoriaServico = new CategoriaServico(categoriaDAO);
         this.categoriaControlador = new CategoriaControladorImpl(categoriaServico);
 
-
+        this.registroDAO = new RegistroDAOImpl(database);
 
         this.produtoDAO = new ProdutoDAOImpl(database);
-        this.produtoServico = new ProdutoServico(produtoDAO);
+        this.produtoServico = new ProdutoServico(produtoDAO, registroDAO);
         this.produtoControlador = new ProdutoControladorImpl(produtoServico);
     }
 
@@ -63,10 +69,8 @@ public class Servidor {
         }
     }
 
-
     private void processarCliente(Socket cliente) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
-             PrintWriter out = new PrintWriter(cliente.getOutputStream(), true)) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(cliente.getInputStream())); PrintWriter out = new PrintWriter(cliente.getOutputStream(), true)) {
 
             String jsonRequisicao;
             while ((jsonRequisicao = in.readLine()) != null) {
@@ -88,14 +92,22 @@ public class Servidor {
 
     private String processarRequisicao(String json) {
         try {
-            // Converte o JSON para Requisicao genérica
-            Requisicao<?> req = JsonUtil.fromJson(json, Requisicao.class);
-            String entidade = req.getEntidade().toLowerCase();
+            Requisicao<?> reqTemp = JsonUtil.fromJson(json, Requisicao.class);
+            Entidade entidade = reqTemp.getEntidade();
 
             return switch (entidade) {
-                case "categoria" -> categoriaControlador.processarRequisicao(req);
-                case "produto" -> produtoControlador.processarRequisicao(req);
-                default -> JsonUtil.toJson(new Resposta("erro", "Entidade '" + entidade + "' não reconhecida", null));
+                case CATEGORIA -> {
+                    Requisicao<Categoria> req = JsonUtil.fromJson(json, new TypeReference<Requisicao<Categoria>>() {
+                    });
+                    yield categoriaControlador.processarRequisicao(req);
+                }
+                case PRODUTO -> {
+                    Requisicao<Produto> req = JsonUtil.fromJson(json, new TypeReference<Requisicao<Produto>>() {
+                    });
+                    yield produtoControlador.processarRequisicao(req);
+                }
+                default ->
+                    JsonUtil.toJson(new Resposta("erro", "Entidade '" + entidade + "' não reconhecida", null));
             };
 
         } catch (Exception e) {
@@ -104,7 +116,7 @@ public class Servidor {
         }
     }
 
-    private void processarClientes(Socket client){
+    private void processarClientes(Socket client) {
 
     }
 }

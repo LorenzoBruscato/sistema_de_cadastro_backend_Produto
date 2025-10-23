@@ -4,10 +4,14 @@ import br.backend.dao.ProdutoDAO;
 import br.backend.database.Database;
 import br.backend.modelo.Categoria;
 import br.backend.modelo.Produto;
+import br.backend.modelo.enums.Embalagem;
+import br.backend.modelo.enums.Tamanho;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProdutoDAOImpl implements ProdutoDAO {
@@ -21,7 +25,7 @@ public class ProdutoDAOImpl implements ProdutoDAO {
     @Override
     public void inserirProduto(Produto obj) {
         String sql = "INSERT INTO produto (nome, preco_unitario, unidade, quantidade, quantidade_minima, quantidade_maxima, categoria_id) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement st = database.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             st.setString(1, obj.getNome());
@@ -61,14 +65,14 @@ public class ProdutoDAOImpl implements ProdutoDAO {
         produtoExistente.setCategoria(novoProduto.getCategoria());
 
         String sql = "UPDATE produto SET "
-                   + "nome = ?, "
-                   + "preco_unitario = ?, "
-                   + "unidade = ?, "
-                   + "quantidade = ?, "
-                   + "quantidade_minima = ?, "
-                   + "quantidade_maxima = ?, "
-                   + "categoria_id = ? "
-                   + "WHERE id = ?";
+                + "nome = ?, "
+                + "preco_unitario = ?, "
+                + "unidade = ?, "
+                + "quantidade = ?, "
+                + "quantidade_minima = ?, "
+                + "quantidade_maxima = ?, "
+                + "categoria_id = ? "
+                + "WHERE id = ?";
 
         try (PreparedStatement st = database.getConnection().prepareStatement(sql)) {
             st.setString(1, produtoExistente.getNome());
@@ -88,8 +92,22 @@ public class ProdutoDAOImpl implements ProdutoDAO {
     }
 
     @Override
+    public void deletarPorId(Integer id) {
+        String sql = "DELETE FROM produto WHERE id = ?";
+        try (PreparedStatement st = database.getConnection().prepareStatement(sql)) {
+            st.setInt(1, id);
+            st.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao deletar categoria: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public Produto buscarPorId(Integer id) {
-        String sql = "SELECT * FROM produto WHERE id = ?";
+        String sql = "SELECT p.*, c.nome AS c_nome, c.tamanho AS c_tamanho, c.embalagem AS c_embalagem "
+                + "FROM produto p "
+                + "JOIN categoria c ON p.categoria_id = c.id "
+                + "WHERE p.id = ?";
         try (PreparedStatement st = database.getConnection().prepareStatement(sql)) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) {
@@ -104,8 +122,22 @@ public class ProdutoDAOImpl implements ProdutoDAO {
     }
 
     @Override
-    public List<Produto> resgatarProdutos() {
-        throw new UnsupportedOperationException("Não implementado ainda.");
+    public List<Produto> resgatarTodosProdutos() {
+        String sql = "SELECT p.*, "
+                + "c.nome AS c_nome, "
+                + "c.tamanho AS c_tamanho, "
+                + "c.embalagem AS c_embalagem "
+                + "FROM produto p "
+                + "JOIN categoria c ON p.categoria_id = c.id";
+        List<Produto> lista = new ArrayList<>();
+        try (PreparedStatement st = database.getConnection().prepareStatement(sql); ResultSet rs = st.executeQuery()) {
+            while (rs.next()) {
+                lista.add(mapProduto(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar todos os Produtos: " + e.getMessage(), e);
+        }
+        return lista;
     }
 
     private Produto mapProduto(ResultSet rs) throws SQLException {
@@ -120,8 +152,12 @@ public class ProdutoDAOImpl implements ProdutoDAO {
 
         Categoria cat = new Categoria();
         cat.setId(rs.getInt("categoria_id"));
+        cat.setNome(rs.getString("c_nome"));
+        cat.setTamanho(Tamanho.valueOf(rs.getString("c_tamanho")));
+        cat.setEmbalagem(Embalagem.valueOf(rs.getString("c_embalagem")));
         p.setCategoria(cat);
 
         return p;
     }
+
 }
