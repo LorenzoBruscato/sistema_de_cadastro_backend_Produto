@@ -5,6 +5,7 @@ import br.backend.modelo.Categoria;
 import br.backend.modelo.Produto;
 import br.backend.modelo.Requisicao;
 import br.backend.modelo.Resposta;
+import br.backend.servico.CategoriaServico;
 import br.backend.servico.ProdutoServico;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -21,18 +22,19 @@ public class ProdutoControladorImpl implements Controlador {
     @Override
     public String processarRequisicao(Requisicao<?> requisicao) {
         try {
-            switch (requisicao.getAcao()) {
-                case CRIAR: {
+            String acao = requisicao.getAcao().toLowerCase();
+
+            switch (acao) {
+                case "criar": {
                     Produto obj = objectMapper.convertValue(requisicao.getDados(), Produto.class);
                     Categoria categoria = obj.getCategoria();
-                    Produto objCriado = produtoServico.inserirProduto(
-                            obj.getNome(), obj.getPreco(), obj.getUnidade(), categoria,
-                            obj.getQuantidade(), obj.getQuantidadeMinima(), obj.getQuantidadeMaxima()
-                    );
+                    Produto objCriado = produtoServico.inserirProduto(obj.getNome(), obj.getPreco(), obj.getUnidade(), categoria,
+                            obj.getQuantidade(), obj.getQuantidadeMinima(), obj.getQuantidadeMaxima());
+
                     return objectMapper.writeValueAsString(new Resposta<>("sucesso", "Produto criado com sucesso", objCriado));
                 }
-
-                case ENCONTRAR: {
+                
+                case "encontrar": {
                     Integer id = objectMapper.convertValue(requisicao.getDados(), Produto.class).getId();
                     Produto encontrado = produtoServico.buscarPorId(id);
                     if (encontrado != null) {
@@ -41,14 +43,14 @@ public class ProdutoControladorImpl implements Controlador {
                         return objectMapper.writeValueAsString(new Resposta<>("erro", "Produto não encontrado", null));
                     }
                 }
-
-                case ATUALIZAR: {
+                
+                case "atualizar": {
                     Produto objAtualizacao = objectMapper.convertValue(requisicao.getDados(), Produto.class);
                     Produto objAtualizado = produtoServico.atualizarProduto(objAtualizacao.getId(), objAtualizacao);
                     return objectMapper.writeValueAsString(new Resposta<>("sucesso", "Produto atualizado com sucesso", objAtualizado));
                 }
 
-                case DELETAR: {
+                case "deletar": {
                     Integer id = objectMapper.convertValue(requisicao.getDados(), Produto.class).getId();
                     boolean excluido = produtoServico.deletarProduto(id);
                     if (excluido) {
@@ -57,18 +59,21 @@ public class ProdutoControladorImpl implements Controlador {
                         return objectMapper.writeValueAsString(new Resposta<>("erro", "Produto não encontrado", null));
                     }
                 }
-
-                case LISTAR: {
-                    return objectMapper.writeValueAsString(new Resposta<>("sucesso", "Lista de produtos", produtoServico.listarProdutos()));
+                
+                case "listar": {
+                    return objectMapper.writeValueAsString(new Resposta<>("sucesso", "Lista de categorias", produtoServico.listarProdutos()));
                 }
-
                 default:
-                    return objectMapper.writeValueAsString(new Resposta<>("erro", "Ação desconhecida", null));
+                    return objectMapper.writeValueAsString(
+                            new Resposta("erro", "Ação desconhecida: " + acao, null)
+                    );
+
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             try {
-                return objectMapper.writeValueAsString(new Resposta<>("erro", "Erro ao processar requisição: " + e.getMessage(), null));
+                return objectMapper.writeValueAsString(new Resposta("erro", "Erro ao processar requisição: " + e.getMessage(), null));
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

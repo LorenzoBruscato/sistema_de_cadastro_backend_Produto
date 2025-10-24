@@ -1,36 +1,33 @@
 package br.backend.modelo;
 
-import br.backend.modelo.enums.Acao;
-import br.backend.modelo.enums.Entidade;
-
 public class Requisicao<T> {
 
-    private Acao acao;         // Antes era String
-    private Entidade entidade; // Antes era String
+    private String acao;
+    private String entidade;
     private T dados;
 
     public Requisicao() {
     }
 
-    public Requisicao(Acao acao, Entidade entidade, T dados) {
+    public Requisicao(String acao, String entidade, T dados) {
         this.acao = acao;
         this.entidade = entidade;
         this.dados = dados;
     }
 
-    public Acao getAcao() {
+    public String getAcao() {
         return acao;
     }
 
-    public void setAcao(Acao acao) {
+    public void setAcao(String acao) {
         this.acao = acao;
     }
 
-    public Entidade getEntidade() {
+    public String getEntidade() {
         return entidade;
     }
 
-    public void setEntidade(Entidade entidade) {
+    public void setEntidade(String entidade) {
         this.entidade = entidade;
     }
 

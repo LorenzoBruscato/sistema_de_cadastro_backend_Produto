@@ -16,6 +16,7 @@ public class ProdutoServico {
     private final ProdutoDAO produtoDAO;
     private final RegistroService registroService;
 
+
     public ProdutoServico(ProdutoDAO produtoDAO, RegistroDAO registroDAO) {
         this.produtoDAO = produtoDAO;
         this.registroService = new RegistroService(registroDAO);
@@ -80,9 +81,10 @@ public class ProdutoServico {
         r.setStatus(Status.DELETADO);
 
         registroService.inserirRegistro(r);
-        produtoDAO.deletarPorId(id);
+
         return true;
     }
+
 
     public Produto buscarPorId(Integer id) {
         return produtoDAO.buscarPorId(id);

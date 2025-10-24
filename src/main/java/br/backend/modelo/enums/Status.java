@@ -1,14 +1,14 @@
 package br.backend.modelo.enums;
 
-    public enum Status {
+public enum Status {
 
-        ACIMA,
-        ABAIXO,
-        DENTRO,
-        ADICIONADO,
-        NOMEALTERADO,
-        DELETADO,
-        NENHUM,
-        ALTERADO
+    ACIMA,
+    ABAIXO,
+    DENTRO,
+    ADICIONADO,
+    NOMEALTERADO,
+    DELETADO,
+    NENHUM,
+    ALTERADO
 
-    }
+}

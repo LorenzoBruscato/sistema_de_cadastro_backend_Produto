@@ -104,10 +104,10 @@ public class ProdutoDAOImpl implements ProdutoDAO {
 
     @Override
     public Produto buscarPorId(Integer id) {
-        String sql = "SELECT p.*, c.nome AS c_nome, c.tamanho AS c_tamanho, c.embalagem AS c_embalagem "
-                + "FROM produto p "
-                + "JOIN categoria c ON p.categoria_id = c.id "
-                + "WHERE p.id = ?";
+        String sql = "SELECT p.*, c.nome AS c_nome, c.tamanho AS c_tamanho, c.embalagem AS c_embalagem " +
+                "FROM produto p " +
+                "JOIN categoria c ON p.categoria_id = c.id " +
+                "WHERE p.id = ?";
         try (PreparedStatement st = database.getConnection().prepareStatement(sql)) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) {
@@ -123,12 +123,7 @@ public class ProdutoDAOImpl implements ProdutoDAO {
 
     @Override
     public List<Produto> resgatarTodosProdutos() {
-        String sql = "SELECT p.*, "
-                + "c.nome AS c_nome, "
-                + "c.tamanho AS c_tamanho, "
-                + "c.embalagem AS c_embalagem "
-                + "FROM produto p "
-                + "JOIN categoria c ON p.categoria_id = c.id";
+        String sql = "SELECT * FROM produto";
         List<Produto> lista = new ArrayList<>();
         try (PreparedStatement st = database.getConnection().prepareStatement(sql); ResultSet rs = st.executeQuery()) {
             while (rs.next()) {
